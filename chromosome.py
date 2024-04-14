@@ -23,7 +23,7 @@ class Chromosome:
             + (self.coordinate.x**2 - 10 * sin(2 * pi * self.coordinate.x))
             + (self.coordinate.y**2 - 10 * sin(2 * pi * self.coordinate.y))
         )
-    
+
 
 class Point:
     def __init__(self, X: float, Y: float) -> None:
@@ -33,3 +33,6 @@ class Point:
     def __iter__(self):
         yield self.x
         yield self.y
+
+    def __repr__(self):
+        return " ".join([str(self.x), str(self.y)])
