@@ -23,6 +23,10 @@ class Chromosome:
             + (self.coordinate.x**2 - 10 * sin(2 * pi * self.coordinate.x))
             + (self.coordinate.y**2 - 10 * sin(2 * pi * self.coordinate.y))
         )
+    
+    def __iter__(self):
+        yield self.coordinate.x
+        yield self.coordinate.y
 
 
 class Point:
