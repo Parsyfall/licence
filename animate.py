@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from evolution import run_evolution
 import numpy as np
+from datetime import datetime
 
 
 def update_plot(frame):
@@ -35,22 +36,38 @@ def generation2list(generations):
     return new_list
 
 
-fig, axis = plt.subplots()
+def main(max_generations):
+    global animated_plot, x_coord, y_coord, text
 
-animated_plot = axis.scatter([], [])
+    start_time = datetime.now()
+    print(f"Starting at: {start_time}")
 
-axis.set(xlim=[-6, 6], ylim=[-6, 6])
+    fig, axis = plt.subplots()
 
-generations = run_evolution(10, 100)
-generations = generation2list(generations)
+    animated_plot = axis.scatter([], [])
 
-text = axis.text(5, 5, "", fontsize=12, ha="center")
+    axis.set(xlim=[-6, 6], ylim=[-6, 6])
 
-x_coord, y_coord = split(generations)
+    generations = run_evolution(max_generations)
+
+    print(f"Evolution done in: {datetime.now() - start_time}")
+    generations = generation2list(generations)
+
+    text = axis.text(5, 5, "", fontsize=12, ha="center")
+
+    x_coord, y_coord = split(generations)
+
+    anim = animation.FuncAnimation(
+        fig=fig, func=update_plot, frames=max_generations, interval=500, repeat=False, blit=True
+    )
+    plt.grid(True)
+    plt.show()
+
+    # anim.save(filename='./animation.gif', writer='pillow')
+
+    print(f"Execution ended at: {datetime.now()}")
+    print(f"Overall it took: {datetime.now() - start_time} secondss")
 
 
-anim = animation.FuncAnimation(
-    fig=fig, func=update_plot, frames=100, interval=800, repeat=False, blit=True
-)
-plt.grid(True)
-plt.show()
+if __name__ == "__main__":
+    main(100)

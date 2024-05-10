@@ -1,10 +1,11 @@
+import numpy as np
 from chromosome import Chromosome
 import random as rd
 from math import dist
 
 # TODO: Refactor all vanila lists to numpy arrays
 
-MutationProbability = 0.1
+MutationProbability = 0.05
 
 
 def generate_population(size: int) -> list[Chromosome]:
@@ -20,7 +21,7 @@ def tournament_selection(
     selected = []
     while len(selected) < return_number:
         participants = rd.sample(population, tournament_size)
-        winner = max(participants, key=lambda x: x.fitness)
+        winner = min(participants, key=lambda x: x.fitness)
         selected.append(winner)
     return selected
 
@@ -42,6 +43,8 @@ def crossover(population: list[Chromosome]) -> list[Chromosome]:
         child = breed_individuals(parent1, parent2)
         new_pop.append(child)
 
+    print(f"Best fitness: {population[0].fitness:.8f} at {population[0].coordinate}")
+    print(f"Second best fitness: {population[1].fitness:.8f} at {population[1].coordinate}")
     return new_pop
 
 
@@ -117,18 +120,24 @@ def crowding(population: list[Chromosome]) -> list[Chromosome]:
     # Mate them and obtain 2 children
     # Now include the best parent and the best child in the new population
 
+    # FIXME: Critical productivity drop, optimize asap
+    # Cause, doubling the population size with each call
     new_population = []
     for parent1 in population:
-        # TODO: Cut the search space in half, for each parent1 must have be a parent2, so there should be no need to do the same search for parent2 as we already know that it's cuple is parent1
         parent2 = find_nearest(population, parent1)
 
+        # Breed
         child1 = breed_individuals(parent1, parent2)
         child2 = breed_individuals(parent1, parent2)
 
-        new_population.append(parent1 if parent1.fitness > parent2.fitness else parent2)
-        new_population.append(child1 if child1.fitness > child2.fitness else child2)
+        # Add to the new population
+        new_population.append(parent1 if parent1.fitness < parent2.fitness else parent2)
+        new_population.append(child1 if child1.fitness < child2.fitness else child2)
 
-    return new_population
+    print(
+        f"Afer crowding, new population size: {len(new_population[: len(population)])}"
+    )
+    return new_population[: len(population)]
 
 
 def find_nearest(population: list[Chromosome], individual: Chromosome) -> Chromosome:
@@ -136,11 +145,11 @@ def find_nearest(population: list[Chromosome], individual: Chromosome) -> Chromo
     Find and return the chromosome in the given population that is closest to the specified individual.
     """
 
-    nearest = population[0]
-    smallest_distance = dist(individual.coordinate, population[0].coordinate)
+    nearest = None
+    smallest_distance = np.inf
 
-    # Iterate through each chromosome in the population, starting from second
-    for elem in population[1:]:
+    # Iterate through each chromosome in the population
+    for elem in population:
         # Skip the individual itself
         if elem is individual:
             continue
@@ -150,10 +159,10 @@ def find_nearest(population: list[Chromosome], individual: Chromosome) -> Chromo
             smallest_distance = distance
             nearest = elem
 
-    return nearest
+    return nearest  # type: ignore
 
 
-def run_evolution(loops, max_generations) -> list[list[Chromosome]]:
+def run_evolution(max_generations) -> list[list[Chromosome]]:
     new_pop: list[Chromosome] = []
     pop: list[Chromosome] = []
 
@@ -168,15 +177,12 @@ def run_evolution(loops, max_generations) -> list[list[Chromosome]]:
     while current_generation < max_generations:
         print(f"Generation: {current_generation}")
 
-        # Adjust fitness
-
-        # Elitism
-
         # Breeding
         new_pop = []
-        new_pop.extend(crossover(pop))
 
-        # mutation(new_pop, 0.08)
+        # fitness_sharing(pop, 0.2)
+        new_pop.extend(crossover(pop))
+        # new_pop.extend(crowding(pop))
 
         pop = new_pop
 
@@ -192,5 +198,5 @@ def plot():
 
 
 if __name__ == "__main__":
-    a = run_evolution(10, 100)
+    a = run_evolution(100)
     print()
