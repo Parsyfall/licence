@@ -10,7 +10,7 @@ MutationProbability = 0.05
 
 def generate_population(size: int) -> list[Chromosome]:
     return [
-        Chromosome.from_pair(rd.uniform(-5.12, 5.12), rd.uniform(-5.12, 5.12))
+        Chromosome(rd.uniform(-5.12, 5.12), rd.uniform(-5.12, 5.12))
         for _ in range(size)
     ]
 
@@ -44,13 +44,15 @@ def crossover(population: list[Chromosome]) -> list[Chromosome]:
         new_pop.append(child)
 
     print(f"Best fitness: {population[0].fitness:.8f} at {population[0].coordinate}")
-    print(f"Second best fitness: {population[1].fitness:.8f} at {population[1].coordinate}")
+    print(
+        f"Second best fitness: {population[1].fitness:.8f} at {population[1].coordinate}"
+    )
     return new_pop
 
 
 def breed_individuals(parent1: Chromosome, parent2: Chromosome) -> Chromosome:
     alpha: float = rd.random()
-    child = Chromosome.from_pair(
+    child = Chromosome(
         alpha * parent1.coordinate.x + (1 - alpha) * parent2.coordinate.x,
         alpha * parent1.coordinate.y + (1 - alpha) * parent2.coordinate.y,
     )
@@ -123,8 +125,19 @@ def crowding(population: list[Chromosome]) -> list[Chromosome]:
     # FIXME: Critical productivity drop, optimize asap
     # Cause, doubling the population size with each call
     new_population = []
+    mating_cache = {}
     for parent1 in population:
         parent2 = find_nearest(population, parent1)
+
+        if (parent1.coordinate, parent2.coordinate) in mating_cache or (
+            parent2.coordinate,
+            parent1.coordinate,
+        ) in mating_cache:
+            # Individuals have already mated
+            continue
+
+        # Cache pairs
+        mating_cache[(parent1.coordinate, parent2.coordinate)] = True
 
         # Breed
         child1 = breed_individuals(parent1, parent2)
@@ -137,6 +150,9 @@ def crowding(population: list[Chromosome]) -> list[Chromosome]:
     print(
         f"Afer crowding, new population size: {len(new_population[: len(population)])}"
     )
+
+    # FIXME: There are a lot of duplicates in new_population
+    new_population.sort(key=lambda genome: genome.fitness)
     return new_population[: len(population)]
 
 
@@ -181,8 +197,8 @@ def run_evolution(max_generations) -> list[list[Chromosome]]:
         new_pop = []
 
         # fitness_sharing(pop, 0.2)
-        new_pop.extend(crossover(pop))
-        # new_pop.extend(crowding(pop))
+        # new_pop.extend(crossover(pop))
+        new_pop.extend(crowding(pop))
 
         pop = new_pop
 
