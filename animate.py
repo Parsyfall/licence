@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 def update_plot(frame):
-    text.set_text(f"Frame: {frame}")
+    text.set_text(f"Generation: {frame}")
     x = np.array(x_coord[frame])
     y = np.array(y_coord[frame])
     data = np.stack([x, y]).T
@@ -28,10 +28,10 @@ def split(matrix):
 
 def generation2list(generations):
     new_list = []
-    for ch_l in generations:
+    for chromosome_list in generations:
         tmp = []
-        for ch in ch_l:
-            tmp.append(list(ch))
+        for chromosome in chromosome_list:
+            tmp.append(list(chromosome))
         new_list.append(tmp)
     return new_list
 
@@ -42,32 +42,56 @@ def main(max_generations):
     start_time = datetime.now()
     print(f"Starting at: {start_time}")
 
-    fig, axis = plt.subplots()
+    # Initialize plot
+    fig, axis = plt.subplots(figsize=(10, 8))
 
-    animated_plot = axis.scatter([], [])
+    # Drawing countour of Rastrigin search space
+    num_points = 10000
+    x = np.random.uniform(-5.12, 5.12, num_points)
+    y = np.random.uniform(-5.12, 5.12, num_points)
+    z = 20 + x**2 + y**2 - 10 * (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y))
+    contour = axis.tricontourf(x, y, z, levels=100, cmap="viridis")
 
-    axis.set(xlim=[-6, 6], ylim=[-6, 6])
+    animated_plot = axis.scatter([], [], color="red", marker='+')
 
+    # Add a colorbar
+    fig.colorbar(contour, ax=axis, label='Function value')
+
+    # Configure axis
+    axis.set(xlim=[-5.2, 5.2], ylim=[-5.2, 5.2])
+    text = axis.text(6, 6, "", fontsize=12, ha="center")
+
+    # Run evolution
     generations = run_evolution(max_generations)
 
     print(f"Evolution done in: {datetime.now() - start_time}")
+
+    # Parse generations
     generations = generation2list(generations)
 
-    text = axis.text(5, 5, "", fontsize=12, ha="center")
-
+    # Split into separe coordinates
     x_coord, y_coord = split(generations)
 
+    # Create animation
     anim = animation.FuncAnimation(
-        fig=fig, func=update_plot, frames=max_generations, interval=500, repeat=False, blit=True
+        fig=fig,
+        func=update_plot,
+        frames=max_generations,
+        interval=200,
+        repeat=False,
+        blit=True,
     )
+
+    # Display plot
     plt.grid(True)
     plt.show()
 
-    # anim.save(filename='./animation.gif', writer='pillow')
+    # Save animation as a GIF
+    anim.save(filename="./animation.gif", writer="pillow")
 
     print(f"Execution ended at: {datetime.now()}")
-    print(f"Overall it took: {datetime.now() - start_time} secondss")
+    print(f"Overall it took: {datetime.now() - start_time} seconds")
 
 
 if __name__ == "__main__":
-    main(100)
+    main(200)
