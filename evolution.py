@@ -32,7 +32,7 @@ def crossover(population: list[Chromosome]) -> list[Chromosome]:
     population.sort(key=lambda genome: genome.fitness)
 
     new_pop: list[Chromosome] = [population[0]]  # Elitism
-    selected = tournament_selection(population, 10, 99)
+    selected = tournament_selection(population, 10, len(population) - 1)
 
     for _ in range(len(selected)):
         index = rd.randint(0, len(selected) - 1)
@@ -43,15 +43,16 @@ def crossover(population: list[Chromosome]) -> list[Chromosome]:
         child = breed_individuals(parent1, parent2)
         new_pop.append(child)
 
-    print(f"Best fitness: {population[0].fitness:.8f} at {population[0].coordinate}")
-    print(
-        f"Second best fitness: {population[1].fitness:.8f} at {population[1].coordinate}"
-    )
+    # print(f"Best fitness: {population[0].fitness:.8f} at {population[0].coordinate}")
+    # print(
+    #     f"Second best fitness: {population[1].fitness:.8f} at {population[1].coordinate}"
+    # )
     return new_pop
 
 
 def breed_individuals(parent1: Chromosome, parent2: Chromosome) -> Chromosome:
     alpha: float = rd.random()
+    # alpha = 0.5
     child = Chromosome(
         alpha * parent1.coordinate.x + (1 - alpha) * parent2.coordinate.x,
         alpha * parent1.coordinate.y + (1 - alpha) * parent2.coordinate.y,
@@ -65,21 +66,23 @@ def mutation(specimen: Chromosome, probability: float) -> None:
     # Bounds for Rastrigin function
     upper_bound = 5.12
     lower_bound = -5.12
+    magnitude = 2
 
     if rd.random() < probability:
-        # Mutate X
-        if rd.random() < 0.5:
-            specimen.coordinate.x -= rd.random() * (specimen.coordinate.x - lower_bound)
-        else:
-            specimen.coordinate.x += rd.random() * (upper_bound - specimen.coordinate.x)
-        # Mutate Y
-        if rd.random() < 0.5:
-            specimen.coordinate.y -= rd.random() * (specimen.coordinate.y - lower_bound)
-        else:
-            specimen.coordinate.y += rd.random() * (upper_bound - specimen.coordinate.y)
+        # Change the magnitude of mutation if needed
+        mutation_amount_x = rd.uniform(-magnitude, magnitude)
+        mutation_amount_y = rd.uniform(-magnitude, magnitude)
+
+        # Apply mutation and ensure bounds
+        specimen.coordinate.x = np.clip(
+            specimen.coordinate.x + mutation_amount_x, lower_bound, upper_bound
+        )
+        specimen.coordinate.y = np.clip(
+            specimen.coordinate.y + mutation_amount_y, lower_bound, upper_bound
+        )
 
         # Reevaluate fitness of mutants
-        specimen.eval_fitness()
+        specimen.fitness = specimen.eval_fitness()
 
 
 def sharing(distance: float, sigma: float, *, alpha: float = 1) -> float:
@@ -122,22 +125,23 @@ def crowding(population: list[Chromosome]) -> list[Chromosome]:
     # Mate them and obtain 2 children
     # Now include the best parent and the best child in the new population
 
-    # FIXME: Critical productivity drop, optimize asap
-    # Cause, doubling the population size with each call
+    # FIXME: After some generation population keeps getting striped down by 2 units
+
     new_population = []
     mating_cache = {}
     for parent1 in population:
-        parent2 = find_nearest(population, parent1)
+        parent2 = find_nearest(population, parent1, mating_cache)
 
-        if (parent1.coordinate, parent2.coordinate) in mating_cache or (
-            parent2.coordinate,
-            parent1.coordinate,
-        ) in mating_cache:
-            # Individuals have already mated
+        if parent2 is None:
+            # In case parent2 is None -> there are no more available mates, break the loop
+            break
+
+        if parent1.coordinate in mating_cache or parent2.coordinate in mating_cache:
             continue
 
-        # Cache pairs
-        mating_cache[(parent1.coordinate, parent2.coordinate)] = True
+        # Cache individuals
+        mating_cache[parent1.coordinate] = True
+        mating_cache[parent2.coordinate] = True
 
         # Breed
         child1 = breed_individuals(parent1, parent2)
@@ -147,18 +151,22 @@ def crowding(population: list[Chromosome]) -> list[Chromosome]:
         new_population.append(parent1 if parent1.fitness < parent2.fitness else parent2)
         new_population.append(child1 if child1.fitness < child2.fitness else child2)
 
-    print(
-        f"Afer crowding, new population size: {len(new_population[: len(population)])}"
-    )
+    # # If population size is odd and one parent was left out, add them
+    # if len(new_population) < len(population):
+    #     remaining_individuals = [
+    #         ind for ind in population if ind.coordinate not in mating_cache
+    #     ]
+    #     new_population.append(remaining_individuals[0])
 
-    # FIXME: There are a lot of duplicates in new_population
-    new_population.sort(key=lambda genome: genome.fitness)
-    return new_population[: len(population)]
+    return new_population
 
 
-def find_nearest(population: list[Chromosome], individual: Chromosome) -> Chromosome:
-    """
-    Find and return the chromosome in the given population that is closest to the specified individual.
+def find_nearest(
+    population: list[Chromosome], individual: Chromosome, mating_register
+) -> None | Chromosome:
+    r"""
+    Find and return the chromosome in the given population that is closest to the specified individual and not in the registry.
+    Return None in case there are no more available mates, or population size was an odd number ¯\\_(ツ)_/¯
     """
 
     nearest = None
@@ -170,7 +178,20 @@ def find_nearest(population: list[Chromosome], individual: Chromosome) -> Chromo
         if elem is individual:
             continue
 
+        # Pontential mate have already mated
+        if elem.coordinate in mating_register:
+            continue
+
         distance = dist(individual.coordinate, elem.coordinate)
+        # FIXME: Distance may be 0
+        if distance == 0.0 or distance == np.inf:
+            # print(f'Found odd distance {distance}')
+            # continue
+            print("Found a distance equal to 0 ")
+            print(individual.coordinate)
+            print(elem.coordinate)
+            # exit()
+
         if distance < smallest_distance:
             smallest_distance = distance
             nearest = elem
@@ -178,14 +199,16 @@ def find_nearest(population: list[Chromosome], individual: Chromosome) -> Chromo
     return nearest  # type: ignore
 
 
-def run_evolution(max_generations) -> list[list[Chromosome]]:
+def run_evolution(
+    max_generations: int, generation_size: int = 100
+) -> list[list[Chromosome]]:
     new_pop: list[Chromosome] = []
     pop: list[Chromosome] = []
 
     # TODO: Use crowding
     # TODO: Use fitness sharing
 
-    pop = generate_population(100)
+    pop = generate_population(generation_size)
 
     pop_history = []
 
@@ -209,10 +232,7 @@ def run_evolution(max_generations) -> list[list[Chromosome]]:
     return pop_history
 
 
-def plot():
-    pass
-
-
 if __name__ == "__main__":
-    a = run_evolution(100)
+    a = run_evolution(100, 10)
+
     print()

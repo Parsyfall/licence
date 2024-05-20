@@ -41,7 +41,9 @@ class Point:
         if not isinstance(other, Point):
             return False
 
-        return isclose(self.x, other.x) and isclose(self.y, other.y)
+        return isclose(self.x, other.x, rel_tol=1e-8) and isclose(
+            self.y, other.y, rel_tol=1e-8
+        )
 
     def __hash__(self):
         return hash((self.x, self.y))
