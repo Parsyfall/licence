@@ -1,5 +1,6 @@
+from typing import Dict
 import numpy as np
-from chromosome import Chromosome
+from chromosome import Chromosome, Point
 import random as rd
 from math import dist
 
@@ -85,6 +86,8 @@ def mutation(specimen: Chromosome, probability: float) -> None:
         specimen.fitness = specimen.eval_fitness()
 
 
+'''
+
 def sharing(distance: float, sigma: float, *, alpha: float = 1) -> float:
     """
     Sharing function of my GA that decides if 2 individuals are close enought to share fitness
@@ -118,6 +121,8 @@ def fitness_sharing(population: list[Chromosome], radius: float) -> None:
 
         # Reset niche_count
         niche_count = 0
+        
+'''
 
 
 def crowding(population: list[Chromosome]) -> list[Chromosome]:
@@ -128,7 +133,8 @@ def crowding(population: list[Chromosome]) -> list[Chromosome]:
     # FIXME: After some generation population keeps getting striped down by 2 units
 
     new_population = []
-    mating_cache = {}
+    mating_cache: Dict[Point, bool] = {}
+
     for parent1 in population:
         parent2 = find_nearest(population, parent1, mating_cache)
 
@@ -156,7 +162,7 @@ def crowding(population: list[Chromosome]) -> list[Chromosome]:
     #     remaining_individuals = [
     #         ind for ind in population if ind.coordinate not in mating_cache
     #     ]
-    #     new_population.append(remaining_individuals[0])
+    #     new_population.append(remaining_individuals.pop())
 
     return new_population
 
@@ -183,20 +189,20 @@ def find_nearest(
             continue
 
         distance = dist(individual.coordinate, elem.coordinate)
-        # FIXME: Distance may be 0
-        if distance == 0.0 or distance == np.inf:
-            # print(f'Found odd distance {distance}')
-            # continue
-            print("Found a distance equal to 0 ")
-            print(individual.coordinate)
-            print(elem.coordinate)
-            # exit()
+
+        if distance == 0.0:
+            # Add small noise to avoid zero distance
+            noise = np.random.normal(0, 1e-8, 2)
+            elem.coordinate.x += noise[0]
+            elem.coordinate.y += noise[1]
+            elem.eval_fitness()
+            distance = dist(individual.coordinate, elem.coordinate)
 
         if distance < smallest_distance:
             smallest_distance = distance
             nearest = elem
 
-    return nearest  # type: ignore
+    return nearest
 
 
 def run_evolution(
