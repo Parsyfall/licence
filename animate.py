@@ -13,8 +13,6 @@ def update_plot(frame):
     y = np.array(y_coord[frame])
     data = np.stack([x, y]).T
     animated_plot.set_offsets(data)
-    if frame in [0, 99]:
-        plt.savefig(f'frame {frame}')
     return animated_plot
 
 
