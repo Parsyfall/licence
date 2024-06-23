@@ -137,6 +137,6 @@ if __name__ == "__main__":
         100,
         100,
         test_function=test_functions.rastrigin,
-        test_function_bounds=test_functions.Bounds.rastrigin, # type: ignore
+        test_function_bounds=test_functions.Bounds.RASTRIGIN.value, # type: ignore
         refresh_interval = 100
         )

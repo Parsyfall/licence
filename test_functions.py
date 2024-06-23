@@ -3,9 +3,9 @@ from enum import Enum
 
 # Store bounds for test functions
 class Bounds(Enum):
-    rastrigin = [-5.12, 5.12],
-    ackley= [-5, 5],
-    schaffer = [-100, 100]
+    RASTRIGIN = (-5.12, 5.12)
+    ACKLEY = (-5, 5)
+    SCHAFFER = (-100, 100)
 
 
 # Define the Rastrigin function for 2D
