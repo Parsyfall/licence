@@ -3,6 +3,7 @@ import numpy as np
 from chromosome import Chromosome, Point
 import random as rd
 from math import dist
+from test_functions import *
 
 # TODO: Refactor all vanila lists to numpy arrays
 
@@ -157,12 +158,9 @@ def crowding(population: list[Chromosome]) -> list[Chromosome]:
         new_population.append(parent1 if parent1.fitness < parent2.fitness else parent2)
         new_population.append(child1 if child1.fitness < child2.fitness else child2)
 
-    # # If population size is odd and one parent was left out, add them
-    # if len(new_population) < len(population):
-    #     remaining_individuals = [
-    #         ind for ind in population if ind.coordinate not in mating_cache
-    #     ]
-    #     new_population.append(remaining_individuals.pop())
+    difference = len(population) - len(new_population)
+    if difference > 0:
+        new_population.extend(generate_population(difference))
 
     return new_population
 
@@ -192,11 +190,12 @@ def find_nearest(
 
         if distance == 0.0:
             # Add small noise to avoid zero distance
-            noise = np.random.normal(0, 1e-8, 2)
+            noise = np.random.normal(0, 1e-5, 2)
             elem.coordinate.x += noise[0]
             elem.coordinate.y += noise[1]
             elem.eval_fitness()
             distance = dist(individual.coordinate, elem.coordinate)
+            print("Distance 0")
 
         if distance < smallest_distance:
             smallest_distance = distance
@@ -214,6 +213,7 @@ def run_evolution(
     # TODO: Use crowding
     # TODO: Use fitness sharing
 
+    # Generate initial poppulation
     pop = generate_population(generation_size)
 
     pop_history = []
@@ -239,6 +239,7 @@ def run_evolution(
 
 
 if __name__ == "__main__":
+    Chromosome.set_fitness_function(rastrigin)
     a = run_evolution(100, 10)
 
     print()
