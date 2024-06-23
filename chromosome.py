@@ -54,14 +54,3 @@ class Point:
 
     def __hash__(self):
         return hash((self.x, self.y))
-
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, Point):
-            return False
-
-        return isclose(self.x, other.x, rel_tol=1e-8) and isclose(
-            self.y, other.y, rel_tol=1e-8
-        )
-
-    def __hash__(self):
-        return hash((self.x, self.y))
