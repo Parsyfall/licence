@@ -205,7 +205,8 @@ def find_nearest(
 
 
 def run_evolution(
-    max_generations: int, generation_size: int = 100
+    max_generations: int,
+    generation_size: int = 100
 ) -> list[list[Chromosome]]:
     new_pop: list[Chromosome] = []
     pop: list[Chromosome] = []
