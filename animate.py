@@ -59,14 +59,16 @@ def get_X_Y_Z(
     value = test_function(x,y)
     return x, y, value
 
-def main(max_generations,
-        population_size,
+def animate(max_generations:int,
+        population_size:int,
         *,
         test_function: Callable[[float, float], float], 
         test_function_bounds: Tuple[float, float],
         refresh_interval = 200,
         ):
     global animated_plot, x_coord, y_coord, text
+
+    Chromosome.set_fitness_function(test_function)
 
     start_time = datetime.now()
     print(f"Starting at: {start_time}")
@@ -132,8 +134,7 @@ def main(max_generations,
 
 if __name__ == "__main__":
     # TODO: Modify implementation to correctly display Chromosome test_function search space on the plot
-    Chromosome.set_fitness_function(test_functions.rastrigin)
-    main(
+    animate(
         100,
         100,
         test_function=test_functions.rastrigin,
