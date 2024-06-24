@@ -1,3 +1,4 @@
+from tkinter import ttk
 import tkinter as tk
 import test_functions
 from animate import animate
@@ -5,8 +6,10 @@ from animate import animate
 def get_data_and_run():
     generations = int(max_gens_ent.get())
     population_size = int(pop_size_ent.get())
+    selected_algorithm = test_function_drp.get()
     func = getattr(test_functions, selected_algorithm.lower())
     bounds = getattr(test_functions.Bounds, selected_algorithm).value
+    print(f'calling: {selected_algorithm}')
     animate(generations,population_size, test_function=func, test_function_bounds=bounds)
 
 def remember_selected(selection):
@@ -34,10 +37,8 @@ pop_size_ent = tk.Entry(master=pop_size_frm)
 
 # Dropdown
 options = test_functions.Bounds._member_names_
-clicked = tk.StringVar()
-clicked.set(options[0])
-test_function_drp = tk.OptionMenu( window , clicked , *options, command=remember_selected )
-selected_algorithm = options[0]
+test_function_drp = ttk.Combobox(master=test_function_frm, state='readonly', values=options)
+test_function_drp.current(0)
 
 run_btn = tk.Button(master=window, text="Ruleaza", command=get_data_and_run)
 
