@@ -10,7 +10,8 @@ def get_data_and_run():
     func = getattr(test_functions, selected_algorithm.lower())
     bounds = getattr(test_functions.Bounds, selected_algorithm).value
     print(f'calling: {selected_algorithm}')
-    animate(generations,population_size, test_function=func, test_function_bounds=bounds)
+    animate(generations,population_size, test_function=func, test_function_bounds=bounds
+            , refresh_interval=100)
 
 def remember_selected(selection):
     selected_algorithm = selection

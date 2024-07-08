@@ -13,8 +13,8 @@ def update_plot(frame):
     y = np.array(y_coord[frame])
     data = np.stack([x, y]).T
     animated_plot.set_offsets(data)
-    if frame in [0, 99]:
-        plt.savefig(f'frame {frame}')
+    # if frame in [0, 99]:
+    #     plt.savefig(f'frame {frame}')
     return animated_plot
 
 
@@ -83,7 +83,7 @@ def animate(max_generations:int,
                         bounds=test_function_bounds,
                         num_points=points
                         )
-    contour = axis.tricontourf(x, y, z, levels=100, cmap="viridis")
+    contour = plt.tricontourf(x, y, z, levels=50, cmap="viridis")
 
     animated_plot = axis.scatter([], [], color="red", marker="+")
 
@@ -91,13 +91,13 @@ def animate(max_generations:int,
     fig.colorbar(contour, ax=axis, label="Function value")
 
     # Configure axis
-    axis.set(xlim=[-5.2, 5.2], ylim=[-5.2, 5.2])
+    axis.set(xlim=[test_function_bounds[0], test_function_bounds[1]], ylim=[test_function_bounds[0], test_function_bounds[1]])
     text = axis.text(6, 6, "", fontsize=12, ha="center")
 
     # Run evolution
-    generations = run_evolution(max_generations, population_size)
+    generations = run_evolution(max_generations, population_size, test_function_bounds)
 
-    print(f"Evolution done in: {datetime.now() - start_time}")
+    # print(f"Evolution done in: {datetime.now() - start_time}")
 
     # Parse generations
     generations = generation_to_coordinate_lists(generations)
@@ -133,11 +133,11 @@ def animate(max_generations:int,
 
 
 if __name__ == "__main__":
-    # TODO: Modify implementation to correctly display Chromosome test_function search space on the plot
+    
     animate(
         100,
         100,
-        test_function=test_functions.rastrigin,
+        test_function=test_functions.schaffer,
         test_function_bounds=test_functions.Bounds.RASTRIGIN.value, # type: ignore
         refresh_interval = 100
         )

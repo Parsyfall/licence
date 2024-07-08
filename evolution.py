@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 import numpy as np
 from chromosome import Chromosome, Point
 import random as rd
@@ -10,9 +10,10 @@ from test_functions import *
 MutationProbability = 0.05
 
 
-def generate_population(size: int) -> list[Chromosome]:
+def generate_population(size: int, bounds: Tuple[float,float] = (-5, 5)) -> list[Chromosome]:
+    # TODO: Generate chromosomes corresponding to function bounds
     return [
-        Chromosome(rd.uniform(-5.12, 5.12), rd.uniform(-5.12, 5.12))
+        Chromosome(rd.uniform(bounds[0], bounds[1]), rd.uniform(bounds[0], bounds[1]))
         for _ in range(size)
     ]
 
@@ -45,10 +46,6 @@ def crossover(population: list[Chromosome]) -> list[Chromosome]:
         child = breed_individuals(parent1, parent2)
         new_pop.append(child)
 
-    # print(f"Best fitness: {population[0].fitness:.8f} at {population[0].coordinate}")
-    # print(
-    #     f"Second best fitness: {population[1].fitness:.8f} at {population[1].coordinate}"
-    # )
     return new_pop
 
 
@@ -65,6 +62,7 @@ def breed_individuals(parent1: Chromosome, parent2: Chromosome) -> Chromosome:
 
 
 def mutation(specimen: Chromosome, probability: float) -> None:
+    # TODO: Adapt bounds to function specifics
     # Bounds for Rastrigin function
     upper_bound = 5.12
     lower_bound = -5.12
@@ -158,6 +156,7 @@ def crowding(population: list[Chromosome]) -> list[Chromosome]:
         new_population.append(parent1 if parent1.fitness < parent2.fitness else parent2)
         new_population.append(child1 if child1.fitness < child2.fitness else child2)
 
+    # Temporary solution
     difference = len(population) - len(new_population)
     if difference > 0:
         new_population.extend(generate_population(difference))
@@ -189,13 +188,14 @@ def find_nearest(
         distance = dist(individual.coordinate, elem.coordinate)
 
         if distance == 0.0:
+            # TODO: Regenerate that chromosome
             # Add small noise to avoid zero distance
             noise = np.random.normal(0, 1e-5, 2)
             elem.coordinate.x += noise[0]
             elem.coordinate.y += noise[1]
             elem.eval_fitness()
             distance = dist(individual.coordinate, elem.coordinate)
-            print("Distance 0")
+            # print("Distance 0")
 
         if distance < smallest_distance:
             smallest_distance = distance
@@ -206,16 +206,16 @@ def find_nearest(
 
 def run_evolution(
     max_generations: int,
-    generation_size: int = 100
+    generation_size: int,
+    bounds: Tuple[float,float]
 ) -> list[list[Chromosome]]:
     new_pop: list[Chromosome] = []
     pop: list[Chromosome] = []
 
-    # TODO: Use crowding
     # TODO: Use fitness sharing
 
     # Generate initial poppulation
-    pop = generate_population(generation_size)
+    pop = generate_population(generation_size, bounds)
 
     pop_history = []
 
@@ -223,13 +223,11 @@ def run_evolution(
     while current_generation < max_generations:
         print(f"Generation: {current_generation}")
 
-        # Breeding
-        new_pop = []
-
         # fitness_sharing(pop, 0.2)
-        # new_pop.extend(crossover(pop))
-        new_pop.extend(crowding(pop))
+        # new_pop.extend(crowding(pop))
+        # new_pop = crossover(pop)
 
+        new_pop = crowding(pop)
         pop = new_pop
 
         # Save population for history
@@ -241,6 +239,6 @@ def run_evolution(
 
 if __name__ == "__main__":
     Chromosome.set_fitness_function(rastrigin)
-    a = run_evolution(100, 10)
+    # a = run_evolution(100, 10)
 
     print()

@@ -1,7 +1,6 @@
 from __future__ import annotations
-from math import sin, pi, isclose
+from math import isclose
 from typing import Callable, Tuple
-import numpy as np
 
 
 class Chromosome:

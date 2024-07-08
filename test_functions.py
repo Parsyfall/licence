@@ -25,7 +25,7 @@ from enum import Enum
 class Bounds(Enum):
     RASTRIGIN = (-5.12, 5.12)
     ACKLEY = (-5, 5)
-    SCHAFFER = (-100, 100)
+    SCHAFFER = (-6, 6)
 
 
 # Define the Rastrigin function for 2D
@@ -42,9 +42,8 @@ def ackley(x: float, y: float) -> float:
         + 20 + np.e
     )
 
-# Define the Ackley function for 2D
+# Define the Schaffer N.2 function for 2D
 def schaffer(x: float, y: float) -> float:
-    return (
-        0.5 + (np.sin(x**2 - y**2) ** 2 - 0.5)
-        / ((1 + 0.001 * (x**2 + y**2)) ** 2)
-    )
+    numerator = np.sin(x**2 - y**2)**2 - 0.5
+    denominator = (1 + 0.001 * (x**2 + y**2))**2
+    return 0.5 + numerator / denominator
